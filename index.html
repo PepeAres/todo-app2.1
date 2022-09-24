@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="idth=wdevice-width, initial-scale=1.0">
+</head>
+<body>
+  <todo-app>
+    <h1>Hola</h1>
+  </todo-app>
+
+  <script type="module">
+    import {LitElement,html} from "https://unpkg.com/lit@2.3.1/index.js?module";
+    console.log(LitElement)
+
+    class TodoApp extends LitElement {
+      connectedCallback(){
+        super.connectedCallback();
+        const URL = "https://jsonplaceholder.typicode.com/todos"
+        fetch (URL)
+        .then((res)=> res.json())
+        .then((data)=>{
+          this.todos = this.mapTodos(data)
+        })
+        console.log('HOLA TODO APP');
+      }
+
+      mapTodos (items){
+        return items.map(item=>{
+          return {
+            text: item.title,isDone:item.completed
+          }
+        })
+      }
+      disconnectedCallback(){
+        console.log('DISCONNECTED TODO APP');
+      }
+
+      static get properties(){
+        return {
+          todos: {
+            type: Array
+          }
+        }
+      }
+      
+      constructor(){
+        super();
+        this.todos = [
+          {
+            text: "levantarce",
+            isDone: false
+          },
+          {
+            text: "dormir",
+            isDone:true
+          },
+          {
+            text: "correr",
+            isDone: false
+          },
+          {
+            text: "cenar",
+            isDone: true
+          }
+        ];
+        
+      }
+
+      
+
+      onSubmit(event) {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        const newItem = data.get("newTarea");
+        event.target.reset();
+        console.log(newItem);
+        this.todos = [...this.todos, {text:newItem}];
+        //this.requestUpdate();
+      }
+
+      remove(item){
+      this.todos = this.todos.filter((todo)=>{
+        if(todo === item){
+          return false;
+        } 
+        return true;
+      });
+      }
+
+      changeDone (item){
+        item.isDone = !item.isDone;
+        this.requestUpdate();
+      }
+
+      render(){
+
+        const {hechos, pendientes} = this.calcularTotales();
+        
+        return html`
+        <form @submit=${this.onSubmit}>
+          <label>
+            <b>TAREA A AGREGRAR</b>
+            <input type="text" name="newTarea"  required/>
+            <button>AGREGAR</button>
+          </label>
+        </form>
+        <ol>
+          ${this.todos.map((item) => {
+            return html`
+            <li>
+              <input
+                type="checkbox"
+                .checked=${item.isDone}
+                @click=${()=> this.changeDone(item)}
+              >
+              ${item.text}
+              <button
+              @click=${()=> this.remove(item)}>X</button>
+              ${
+                this.imprimirEstado(item.isDone)
+              }
+            </li>`;
+          })}
+        </ol>
+        <section>
+          <p>Terminados: ${hechos}</p>
+          <p>Pendientes:${pendientes}</p>
+        </section>
+
+        `;
+      }
+
+      calcularTotales(){
+        const hechos = this.todos.filter((item)=> item.isDone).length;
+        return {
+          hechos,
+          pendientes:this.todos.length - hechos
+
+        }
+      }
+
+      imprimirEstado(isDone) {
+        if (isDone) {
+          return 'Terminado';
+        }
+
+        return 'Pendiente';
+      }
+
+    }
+
+    customElements.define('todo-app',TodoApp);
+  </script>
+</body>
+</html>
+<!--paso porreferencia y valor
+comparacion-->
